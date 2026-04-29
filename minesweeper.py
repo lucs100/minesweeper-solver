@@ -32,15 +32,45 @@ class Minesweeper:
         """
         return x + y * self.width
     
+    def cellToCoords(self, idx) -> tuple[int, int]:
+        """
+        Returns a cell's coordinates. The top-left cell is (0, 0).
+        """
+        x = idx % self.width
+        y = idx // self.width
+        return (x, y)
+    
     def cellHasMine(self, idx) -> bool:
         """
         Returns whether a cell contains a mine.
         """
         return idx in self._mine_locations
     
-    def showGridWithMines(self) -> str:
+    def getSurroundingMineCount(self, idx) -> int:
+        """
+        Returns the number of mines in the 8 adjacent cells.
+        If the current cell has a mine, returns -1. #TODO: May be redundant.
+        """
+        if self.cellHasMine(idx):
+            return -1
+
+        x, y = self.cellToCoords(idx)
+        xMin = max(x-1, 0)
+        xMax = min(x+1, self.width-1)
+        yMin = max(y-1, 0)
+        yMax = min(y+1, self.height-1)
+
+        mineCount = 0
+        for x in range(xMin, xMax+1):
+            for y in range(yMin, yMax+1):
+                mineCount += self.cellHasMine(self.coordsToCell(x, y))
+        return mineCount
+
+    
+    def showGrid(self, showCounts=False, printLines=True) -> str:
         """
         Returns a string representation of the grid. Each "x" represents a mine.
+        If showCounts is enabled, also shows the number of surrounding mines. 
         """
         outStr = ""
         for y in range(self.height):
@@ -50,12 +80,20 @@ class Minesweeper:
                 if self.cellHasMine(cell):
                     outStr += "x|"
                 else:
-                    outStr += " |"
-            outStr += "\n"
-        return outStr
+                    label = " "
+                    if showCounts:
+                        label = self.getSurroundingMineCount(cell)
+                    outStr += f"{label}|"
+            if printLines:
+                print(outStr)
+                outStr = ""
+            else:
+                outStr += "\n"
+        if not printLines:
+            return outStr
 
     def __repr__(self) -> str:
-        return self.showGridWithMines()
+        return self.showGrid(printLines=False)
 
 if __name__ == "__main__":
     myMinesweeper = Minesweeper(50, 10, 95, (2, 5))
